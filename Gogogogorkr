@@ -1,1 +1,158 @@
-local Players = game:GetService("Players")local RunService = game:GetService("RunService")local UserInputService = game:GetService("UserInputService")local LocalPlayer = Players.LocalPlayerlocal _Active, _Visuals, _StaffDetect = false, false, falselocal _Size, _Trans = 15, 0.7-- GUI Principallocal ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))ScreenGui.ResetOnSpawn = falselocal MainFrame = Instance.new("Frame", ScreenGui)MainFrame.Size = UDim2.new(0, 220, 0, 320)MainFrame.Position = UDim2.new(0.5, -110, 0.5, -160)MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)MainFrame.Visible = trueMainFrame.Active = trueMainFrame.Draggable = trueInstance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)-- Bouton d'ouverture Mobilelocal OpenBtn = Instance.new("TextButton", ScreenGui)OpenBtn.Size = UDim2.new(0, 50, 0, 50)OpenBtn.Position = UDim2.new(0, 10, 0.5, -25)OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)OpenBtn.Text = "MENU"OpenBtn.TextColor3 = Color3.new(1, 1, 1)OpenBtn.Font = Enum.Font.GothamBoldInstance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)OpenBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)local Title = Instance.new("TextLabel", MainFrame)Title.Size = UDim2.new(1, 0, 0, 35)Title.Text = "BADDIES LITE"Title.Font = Enum.Font.GothamBoldTitle.TextColor3 = Color3.new(1, 1, 1)Title.TextSize = 14Title.BackgroundTransparency = 1local function createBtn(name, pos, color) local btn = Instance.new("TextButton", MainFrame) btn.Size = UDim2.new(0, 180, 0, 35) btn.Position = pos btn.BackgroundColor3 = color or Color3.fromRGB(45, 45, 50) btn.Text = name btn.Font = Enum.Font.GothamSemibold btn.TextColor3 = Color3.new(1, 1, 1) btn.TextSize = 13 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6) return btnendlocal HitboxBtn = createBtn("Hitbox: OFF", UDim2.new(0, 20, 0, 45))local VisualBtn = createBtn("Visuals: OFF", UDim2.new(0, 20, 0, 90))local StaffBtn = createBtn("Staff Detect: OFF", UDim2.new(0, 20, 0, 135))-- Sliders FIXÉSlocal function createSlider(name, pos, min, max, default) local label = Instance.new("TextLabel", MainFrame) label.Size = UDim2.new(1, 0, 0, 20) label.Position = pos label.Text = name .. ": " .. default label.Font = Enum.Font.GothamBold label.TextColor3 = Color3.new(1,1,1) label.TextSize = 12 label.BackgroundTransparency = 1 local sliderBtn = Instance.new("TextButton", MainFrame) sliderBtn.Size = UDim2.new(0, 180, 0, 15) sliderBtn.Position = pos + UDim2.new(0, 20, 0, 22) sliderBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45) sliderBtn.Text = "" sliderBtn.AutoButtonColor = false Instance.new("UICorner", sliderBtn) local fill = Instance.new("Frame", sliderBtn) fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0) fill.BackgroundColor3 = Color3.fromRGB(0, 120, 255) Instance.new("UICorner", fill) local dragging = false local function update(input) local inputPos = input.Position.X local sliderPos = sliderBtn.AbsolutePosition.X local sliderWidth = sliderBtn.AbsoluteSize.X local percentage = math.clamp((inputPos - sliderPos) / sliderWidth, 0, 1) fill.Size = UDim2.new(percentage, 0, 1, 0) local val = min + (percentage * (max - min)) if max > 1 then val = math.floor(val) else val = tonumber(string.format("%.1f", val)) end label.Text = name .. ": " .. val return val end sliderBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true local val = update(input) if name == "Taille" then _Size = val else _Trans = val end end end) UserInputService.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then local val = update(input) if name == "Taille" then _Size = val else _Trans = val end end end) UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end) return labelendcreateSlider("Taille", UDim2.new(0, 0, 0, 185), 2, 50, 15)createSlider("Transparence", UDim2.new(0, 0, 0, 245), 0, 1, 0.7)-- Logique BoutonsHitboxBtn.MouseButton1Click:Connect(function() _Active = not _Active HitboxBtn.Text = _Active and "Hitbox: ON" or "Hitbox: OFF" HitboxBtn.BackgroundColor3 = _Active and Color3.fromRGB(0, 180, 100) or Color3.fromRGB(45, 45, 50)end)VisualBtn.MouseButton1Click:Connect(function() _Visuals = not _Visuals VisualBtn.Text = _Visuals and "Visuals: ON" or "Visuals: OFF" VisualBtn.BackgroundColor3 = _Visuals and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(45, 45, 50)end)StaffBtn.MouseButton1Click:Connect(function() _StaffDetect = not _StaffDetect StaffBtn.Text = _StaffDetect and "Staff: ACTIVE" or "Staff: OFF" StaffBtn.BackgroundColor3 = _StaffDetect and Color3.fromRGB(255, 80, 0) or Color3.fromRGB(45, 45, 50)end)-- Boucle HitboxRunService.RenderStepped:Connect(function() for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then local hrp = p.Character.HumanoidRootPart if _Active then hrp.Size = Vector3.new(_Size, _Size, _Size) hrp.Transparency = _Visuals and _Trans or 1 hrp.CanCollide = false else hrp.Size = Vector3.new(2, 2, 1) hrp.Transparency = 1 end end endend)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Config
+local GROUP_ID = 11158043705 
+local STAFF_MIN_RANK = 2 
+
+-- State
+local _Active, _Visuals, _StaffDetect = false, false, false
+local _Size, _Trans = 15, 0.7
+
+-- GUI Base
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.ResetOnSpawn = false 
+
+-- Main Frame (Apparaît automatiquement)
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 220, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -110, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = true -- Activé par défaut
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+local Stroke = Instance.new("UIStroke", MainFrame)
+Stroke.Color = Color3.fromRGB(60, 60, 70)
+
+-- Drag System (Mobile & PC)
+local dragging, dragInput, dragStart, startPos
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true dragStart = input.Position startPos = MainFrame.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
+
+-- Title
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "BADDIES V2"
+Title.Font = Enum.Font.GothamBold
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.TextSize = 14
+Title.BackgroundTransparency = 1
+
+-- Boutons
+local function createBtn(name, pos)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(0, 180, 0, 35)
+    btn.Position = pos
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+    btn.Text = name
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.TextSize = 12
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    return btn
+end
+
+local HitboxBtn = createBtn("Hitbox: OFF", UDim2.new(0, 20, 0, 50))
+local VisualBtn = createBtn("Visuals: OFF", UDim2.new(0, 20, 0, 95))
+local StaffBtn = createBtn("Staff Detect: OFF", UDim2.new(0, 20, 0, 140))
+
+-- Sliders
+local function createSlider(name, pos, min, max, default)
+    local container = Instance.new("Frame", MainFrame)
+    container.Size = UDim2.new(0, 180, 0, 50)
+    container.Position = pos
+    container.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel", container)
+    label.Size = UDim2.new(1, 0, 0, 15)
+    label.Text = name .. ": " .. default
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Font = Enum.Font.GothamSemibold
+    label.TextSize = 11
+    label.BackgroundTransparency = 1
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local back = Instance.new("Frame", container)
+    back.Size = UDim2.new(1, 0, 0, 6)
+    back.Position = UDim2.new(0, 0, 0, 25)
+    back.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    Instance.new("UICorner", back)
+
+    local fill = Instance.new("Frame", back)
+    fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
+    fill.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    Instance.new("UICorner", fill)
+
+    local function update(input)
+        local p = math.clamp((input.Position.X - back.AbsolutePosition.X) / back.AbsoluteSize.X, 0, 1)
+        fill.Size = UDim2.new(p, 0, 1, 0)
+        local val = min + (p * (max - min))
+        if max > 1 then val = math.floor(val) end
+        label.Text = name .. ": " .. (max <= 1 and string.format("%.1f", val) or val)
+        return val
+    end
+
+    local active = false
+    container.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then active = true local v = update(i) if name == "Size" then _Size = v else _Trans = v end end end)
+    UserInputService.InputChanged:Connect(function(i) if active and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then local v = update(i) if name == "Size" then _Size = v else _Trans = v end end end)
+    UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then active = false end end)
+end
+
+createSlider("Size", UDim2.new(0, 20, 0, 190), 2, 50, 15)
+createSlider("Trans", UDim2.new(0, 20, 0, 250), 0, 1, 0.7)
+
+-- Logic
+HitboxBtn.MouseButton1Click:Connect(function()
+    _Active = not _Active
+    HitboxBtn.Text = _Active and "Hitbox: ON" or "Hitbox: OFF"
+    HitboxBtn.BackgroundColor3 = _Active and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(40, 40, 45)
+end)
+
+VisualBtn.MouseButton1Click:Connect(function()
+    _Visuals = not _Visuals
+    VisualBtn.Text = _Visuals and "Visuals: ON" or "Visuals: OFF"
+    VisualBtn.BackgroundColor3 = _Visuals and Color3.fromRGB(0, 100, 200) or Color3.fromRGB(40, 40, 45)
+end)
+
+StaffBtn.MouseButton1Click:Connect(function()
+    _StaffDetect = not _StaffDetect
+    StaffBtn.Text = _StaffDetect and "Staff: ACTIVE" or "Staff: OFF"
+    StaffBtn.BackgroundColor3 = _StaffDetect and Color3.fromRGB(200, 80, 0) or Color3.fromRGB(40, 40, 45)
+end)
+
+-- Main Loop
+RunService.RenderStepped:Connect(function()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = p.Character.HumanoidRootPart
+            if _Active then
+                hrp.Size = Vector3.new(_Size, _Size, _Size)
+                hrp.Transparency = _Visuals and _Trans or 1
+                hrp.CanCollide = false
+                hrp.Color = Color3.fromRGB(0, 120, 255)
+            else
+                hrp.Size = Vector3.new(2, 2, 1)
+                hrp.Transparency = 1
+            end
+        end
+    end
+end)
+
+-- Staff Check
+Players.PlayerAdded:Connect(function(p)
+    if _StaffDetect and p:GetRankInGroup(GROUP_ID) >= STAFF_MIN_RANK then 
+        LocalPlayer:Kick("🛡️ STAFF DÉTECTÉ") 
+    end
+end)
